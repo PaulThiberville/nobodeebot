@@ -13,7 +13,7 @@ module.exports = {
 
     const randomMember =
       voiceChannel.members[
-        Math.floor(Math.random() * voiceChannelMembers.length)
+        Math.floor(Math.random() * voiceChannel.members.length)
       ];
 
     await interaction.reply({
