@@ -11,13 +11,14 @@ module.exports = {
       return interaction.reply("You should be in a voice channel");
     }
 
-    const randomMember =
-      voiceChannel.members[
-        Math.floor(Math.random() * voiceChannel.members.length)
-      ];
+    const randomMemberIndex = Math.floor(
+      Math.random() * voiceChannel.members.size
+    );
+
+    const randomMember = [...voiceChannel.members][randomMemberIndex];
 
     await interaction.reply({
-      embeds: [peopleEmbed(randomMember)],
+      embeds: [peopleEmbed(randomMember[1])],
     });
   },
 };
