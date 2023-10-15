@@ -3,6 +3,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const token = process.env.TOKEN;
+const express = require("express");
+const app = express();
+const port = process.env.PORT || 3001;
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -47,18 +50,10 @@ for (const file of eventFiles) {
 
 client.login(token);
 
-// ping route
-const http = require("http");
-
-const hostname = "127.0.0.1";
-const PORT = process.env.PORT || 3001;
-
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "text/plain");
-  res.end("pong");
+app.get("/ping", (req, res) => {
+  res.send("pong");
 });
 
-server.listen(PORT, hostname, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
 });
