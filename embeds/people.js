@@ -1,12 +1,12 @@
 exports.peopleEmbed = (people) => {
-  const { id, avatar, displayName } = people.user;
-  console.log("user:", JSON.stringify(people.user, null, 2));
-  console.log("people:", JSON.stringify(people, null, 2));
-  const avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+  const { id, avatar, globalName, username } = people.user;
+  const { nickName, displayName } = people;
+  const icon_url = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+  const name = nickName || displayName || globalName || username;
   return {
     author: {
-      name: displayName,
-      icon_url: avatarUrl,
+      name,
+      icon_url,
     },
   };
 };
