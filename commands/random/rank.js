@@ -9,7 +9,6 @@ module.exports = {
       return option
         .setName("role")
         .setDescription("Role to filter")
-        .setAutocomplete(true)
         .setRequired(false);
     }),
   async execute(interaction) {
@@ -19,6 +18,10 @@ module.exports = {
     }
 
     const role = interaction.options.getRole("role");
+
+    if (role && !interaction.guild.roles.cache.has(role.id)) {
+      return interaction.reply("The role does not exist");
+    }
 
     let shuffledMembers = voiceChannel.members.sort(
       (a, b) => 0.5 - Math.random()
@@ -35,8 +38,13 @@ module.exports = {
       return peopleEmbed(people);
     });
 
-    await interaction.reply({
-      embeds,
-    });
+    try {
+      await interaction.reply({
+        embeds,
+      });
+    } catch (error) {
+      console.error(error); // Log the detailed error for debugging
+      interaction.reply("An error occurred while trying to send the message."); // Send a generic error message to the user
+    }
   },
 };
