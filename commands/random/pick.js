@@ -7,40 +7,45 @@ module.exports = {
     .setName("pick")
     .setDescription("Pick a user in your voice channel"),
   async execute(interaction) {
-    const voiceChannel = interaction.member.voice.channel;
-    if (!voiceChannel) {
-      return interaction.reply("You should be in a voice channel");
-    }
-    const lastPickRes = await db.collection("last_pick").doc("current").get();
-    let selectedMemberIndex = null;
-    while (!selectedMemberIndex) {
-      let randomMemberIndex = Math.floor(
-        Math.random() * voiceChannel.members.size
-      );
-      if (!lastPickRes.exists) {
-        selectedMemberIndex = randomMemberIndex;
-      }
-      const lastPick = lastPickRes.data();
-      if (lastPick.memberId !== voiceChannel.members[randomMemberIndex].id) {
-        console.log("lastPick", lastPick);
-        console.log("randomMemberIndex", randomMemberIndex);
-        console.log("voiceChannel.members", voiceChannel.members);
-        console.log(
-          "voiceChannel.members[randomMemberIndex]",
-          voiceChannel.members[randomMemberIndex]
+    try {
+      const voiceChannel = interaction.member.voice.channel;
+      if (!voiceChannel || voiceChannel.members.size === 0) {
+        return interaction.reply(
+          "Vous devez être dans un canal vocal non vide"
         );
-        await db.collection("last_pick").doc("current").set({
-          memberId: voiceChannel.members[randomMemberIndex].id,
-          date: Date.now(),
-        });
-        selectedMemberIndex = randomMemberIndex;
       }
+
+      const members = Array.from(voiceChannel.members.values());
+      const lastPickRes = await db.collection("last_pick").doc("current").get();
+      let selectedMember = null;
+      const lastPickId = lastPickRes.exists ? lastPickRes.data().userId : null;
+      const eligibleMembers = members.filter(
+        (member) => member.id !== lastPickId
+      );
+
+      if (eligibleMembers.length === 0) {
+        selectedMember = members[Math.floor(Math.random() * members.length)];
+      } else {
+        selectedMember =
+          eligibleMembers[Math.floor(Math.random() * eligibleMembers.length)];
+      }
+
+      await Promise.all([
+        db.collection("last_pick").doc("current").set({
+          userId: selectedMember.id,
+          date: Date.now(),
+        }),
+        interaction.reply({
+          embeds: [peopleEmbed(selectedMember)],
+        }),
+      ]);
+    } catch (error) {
+      console.error("Erreur lors de la sélection d'un utilisateur:", error);
+      await interaction.reply({
+        content:
+          "Une erreur s'est produite lors de la sélection d'un utilisateur",
+        ephemeral: true,
+      });
     }
-
-    const randomMember = [...voiceChannel.members][randomMemberIndex];
-
-    await interaction.reply({
-      embeds: [peopleEmbed(randomMember[1])],
-    });
   },
 };

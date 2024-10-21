@@ -20,7 +20,6 @@ loadEvents(client);
 
 client.once("ready", () => {
   try {
-    console.log("Bot is ready!");
     initializeScheduledEvents(client);
   } catch (error) {
     console.error(error);
