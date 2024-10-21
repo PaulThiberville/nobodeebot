@@ -24,13 +24,20 @@ const getTopArticles = async (topics) => {
 
     return articles;
   } catch (error) {
-    console.error("Erreur lors de la récupération des articles:", error);
+    console.error(
+      "Erreur lors de la récupération des articles:",
+      JSON.stringify(error, null, 2)
+    );
     return [];
   }
 };
 
 const generateChronicle = async (articles) => {
-  const prompt = `Tu realise un post discord quotidien pour une equipe au sein d'une agence de develepement d'applications web et mobile qui s'appelle "InProgress".L'intégralité du message doit absolument être ecrit en Français Utilise la syntaxe Markdown pour rendre le message plus dynamique. Utilise un ton Sympathique et blagueur. N'hesite pas à utiliser des emoticons. Tu dois placer "#InProgress" à la fin du message. En premier lieu rappel que le daily meeting aura lieu dans 5 minutes. Ensuite propose à l'equipe une recette de boisson originale à base de café en une ligne. Tu finis par un résumé de quelques lignes des articles suivants en fournissant le lien de chacuns :
+  let prompt;
+  if (!articles.length) {
+    prompt = `Tu realise un post discord quotidien pour une equipe au sein d'une agence de develepement d'applications web et mobile qui s'appelle "InProgress".L'intégralité du message doit absolument être ecrit en Français Utilise la syntaxe Markdown pour rendre le message plus dynamique. Utilise un ton Sympathique et blagueur. N'hesite pas à utiliser des emoticons. Tu dois placer "#InProgress" à la fin du message. En premier lieu rappel que le daily meeting aura lieu dans 5 minutes. Ensuite propose à l'equipe une recette de boisson originale à base de café en une ligne. Normalement tu dois finir avec un résumé de quelque articles mais aujourd'hui tu n'e a malheureusement aucun à proposer.`;
+  } else {
+    prompt = `Tu realise un post discord quotidien pour une equipe au sein d'une agence de develepement d'applications web et mobile qui s'appelle "InProgress".L'intégralité du message doit absolument être ecrit en Français Utilise la syntaxe Markdown pour rendre le message plus dynamique. Utilise un ton Sympathique et blagueur. N'hesite pas à utiliser des emoticons. Tu dois placer "#InProgress" à la fin du message. En premier lieu rappel que le daily meeting aura lieu dans 5 minutes. Ensuite propose à l'equipe une recette de boisson originale à base de café en une ligne. Tu finis par un résumé de quelques lignes des articles suivants en fournissant le lien de chacuns :
   ${articles
     .map(
       (a) =>
@@ -39,6 +46,7 @@ const generateChronicle = async (articles) => {
         }`
     )
     .join("\n\n")}`;
+  }
 
   try {
     const response = await fetchOpenAi("/chat/completions", {
@@ -62,16 +70,12 @@ const generateChronicle = async (articles) => {
 };
 
 const getMessage = async () => {
-  const topicsRes = await db.collection("daily_news_topic").get();
+  const topicsRes = await db.collection("daily_news_topics").get();
   const topics = topicsRes.docs.map((doc) => {
     const data = doc.data();
     return data.topic;
   });
   const articles = await getTopArticles(topics);
-  if (articles.length === 0) {
-    return "Désolé, je n'ai pas trouvé d'article pertinent aujourd'hui. Le daily meeting aura quand même lieu dans 5 minutes !";
-  }
-
   const message = await generateChronicle(articles);
   return message;
 };
@@ -79,7 +83,15 @@ const getMessage = async () => {
 const sendDailyNewsInChannel = async (channel) => {
   try {
     const message = await getMessage();
-    const subscribersRes = await db.collection("daily_news_subscribers").get();
+    const serverId = channel.guild.id;
+    const subscribersRes = await db
+      .collection("daily_news_servers")
+      .doc(serverId)
+      .collection("subscribers")
+      .get();
+    if (subscribersRes.docs.length === 0) {
+      return;
+    }
     const subscriberMentions = subscribersRes.docs.map(
       (doc) => `<@${doc.data().userId}>`
     );

@@ -13,7 +13,7 @@ module.exports = {
   async execute(interaction) {
     try {
       const topic = interaction.options.getString("topic");
-      await db.collection("daily_news_topic").add({
+      await db.collection("daily_news_topics").add({
         topic,
       });
       await interaction.reply(

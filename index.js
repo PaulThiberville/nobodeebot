@@ -3,34 +3,27 @@ require("./firebase");
 const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const { loadCommands } = require("./commands");
 const { loadEvents } = require("./events");
-const initializeScheduledEvents = require("./scheduledEvents");
 const token = process.env.TOKEN;
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 3001;
+const router = require("./routes");
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 client.commands = new Collection();
+client.login(token);
 
 loadCommands(client);
 loadEvents(client);
-
-client.once("ready", () => {
-  try {
-    initializeScheduledEvents(client);
-  } catch (error) {
-    console.error(error);
-  }
+app.use(express.json());
+app.use((req, res, next) => {
+  req.client = client;
+  next();
 });
-
-client.login(token);
-
-app.get("/ping", (req, res) => {
-  res.send("pong");
-});
+app.use("", router);
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);

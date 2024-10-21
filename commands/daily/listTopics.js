@@ -6,7 +6,7 @@ module.exports = {
     .setDescription("Lister les sujets de l'alerte quotidienne"),
   async execute(interaction) {
     try {
-      const topicsRes = await db.collection("daily_news_topic").get();
+      const topicsRes = await db.collection("daily_news_topics").get();
       if (topicsRes.docs.length === 0) {
         await interaction.reply(
           `Il n'y a actuellement aucun sujet dans la liste des sujets de l'alerte quotidienne`

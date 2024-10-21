@@ -14,7 +14,7 @@ module.exports = {
     try {
       const topic = interaction.options.getString("topic");
       const topicsRes = await db
-        .collection("daily_news_topic")
+        .collection("daily_news_topics")
         .where("topic", "==", topic)
         .get();
       if (topicsRes.docs.length === 0) {
@@ -23,7 +23,7 @@ module.exports = {
         );
       } else {
         await db
-          .collection("daily_news_topic")
+          .collection("daily_news_topics")
           .doc(topicsRes.docs[0].id)
           .delete();
         await interaction.reply(
